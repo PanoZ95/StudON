@@ -1,0 +1,6 @@
+{
+  "name": "StudON",
+  "description": "Η απόλυτη πλατφόρμα κοινωνικής δικτύωσης και μάθησης για λάτρεις της μηχανολογίας και αεροναυπηγικής.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
