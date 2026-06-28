@@ -137,6 +137,12 @@ export async function searchPostsAndUsers(
   const trimmed = query.trim();
   if (!trimmed) return { posts: [], users: [] };
 
+  // Καθαρίζουμε την είσοδο του χρήστη από χαρακτήρες που έχουν ειδικό νόημα
+  // στη σύνταξη φίλτρων του PostgREST (π.χ. ',' '(' ')' '%' '*'), ώστε κάποιος
+  // να μην μπορεί να "σπάσει" το query και να αλλάξει το νόημά του.
+  const safe = trimmed.replace(/[,()%*]/g, '');
+  if (!safe) return { posts: [], users: [] };
+
   const [postsResult, usersResult] = await Promise.all([
     supabase
       .from('posts')
@@ -147,13 +153,13 @@ export async function searchPostsAndUsers(
         post_fires ( user_id ),
         comments ( id, text, created_at, profiles!comments_user_id_fkey ( username, avatar_url ) )
       `)
-      .or(`content_text.ilike.%${trimmed}%,category_id.ilike.%${trimmed}%`)
+      .or(`content_text.ilike.%${safe}%,category_id.ilike.%${safe}%`)
       .order('created_at', { ascending: false })
       .limit(30),
     supabase
       .from('profiles')
       .select('id, username, avatar_url')
-      .ilike('username', `%${trimmed}%`)
+      .ilike('username', `%${safe}%`)
       .limit(10),
   ]);
 
