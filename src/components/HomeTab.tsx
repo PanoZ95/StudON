@@ -165,12 +165,13 @@ export default function HomeTab({ userId, currentUsername, currentAvatar }: Home
     }
   };
 
-  const handleCreatePost = async (category: string, text: string, imageUrl: string) => {
+  const handleCreatePost = async (category: string, text: string, imageUrl: string, isVideo: boolean) => {
     await createPost({
       userId,
       category,
       contentText: text,
       contentImageUrl: imageUrl,
+      isVideo,
     });
     setShowNewPostForm(false);
     loadPosts();
@@ -311,12 +312,21 @@ export default function HomeTab({ userId, currentUsername, currentAvatar }: Home
 
                 {post.contentImage && (
                   <div className="relative w-full aspect-[4/5] sm:aspect-video md:aspect-[4/5] bg-surface-container-lowest overflow-hidden">
-                    <img
-                      src={post.contentImage}
-                      alt="Post content"
-                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
-                      referrerPolicy="no-referrer"
-                    />
+                    {post.isVideo ? (
+                      <video
+                        src={post.contentImage}
+                        className="w-full h-full object-cover"
+                        controls
+                        playsInline
+                      />
+                    ) : (
+                      <img
+                        src={post.contentImage}
+                        alt="Post content"
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                        referrerPolicy="no-referrer"
+                      />
+                    )}
                     {post.engineTag && (
                       <div className="absolute bottom-4 right-4 bg-surface-container/90 backdrop-blur-md px-3 py-1 rounded-full border border-white/10 shadow-lg">
                         <span className="text-xs font-semibold text-primary-fixed-dim tracking-wider font-mono uppercase">
@@ -474,26 +484,27 @@ interface NewPostModalProps {
   categories: string[];
   userId: string;
   onClose: () => void;
-  onSubmit: (category: string, text: string, imageUrl: string) => Promise<void>;
+  onSubmit: (category: string, text: string, imageUrl: string, isVideo: boolean) => Promise<void>;
 }
 
 function NewPostModal({ categories, userId, onClose, onSubmit }: NewPostModalProps) {
   const [category, setCategory] = useState(categories[0] ?? '');
   const [text, setText] = useState('');
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [isVideo, setIsVideo] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!imageUrl) {
-      setErrorMsg('Ανέβασε πρώτα μια εικόνα για την ανάρτηση.');
+      setErrorMsg('Ανέβασε πρώτα μια εικόνα ή βίντεο για την ανάρτηση.');
       return;
     }
     setSubmitting(true);
     setErrorMsg(null);
     try {
-      await onSubmit(category, text.trim(), imageUrl);
+      await onSubmit(category, text.trim(), imageUrl, isVideo);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Κάτι πήγε στραβά.');
     } finally {
@@ -533,8 +544,8 @@ function NewPostModal({ categories, userId, onClose, onSubmit }: NewPostModalPro
           </div>
 
           <div>
-            <label className="text-xs text-on-surface-variant mb-1 block">Εικόνα</label>
-            <ImageUploader userId={userId} onUploaded={setImageUrl} />
+            <label className="text-xs text-on-surface-variant mb-1 block">Εικόνα ή βίντεο</label>
+            <ImageUploader userId={userId} onUploaded={(url, video) => { setImageUrl(url); setIsVideo(video); }} />
           </div>
 
           <div>

@@ -1,17 +1,18 @@
 import React, { useState, useRef, ChangeEvent } from 'react';
-import { Upload, X, Loader2, ImageIcon } from 'lucide-react';
+import { X, Loader2, ImageIcon, Video } from 'lucide-react';
 import { uploadPostImage } from '../lib/uploadImage';
 
 interface ImageUploaderProps {
   userId: string;
-  onUploaded: (publicUrl: string) => void;
+  onUploaded: (url: string, isVideo: boolean) => void;
 }
 
 export default function ImageUploader({ userId, onUploaded }: ImageUploaderProps) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isVideoPreview, setIsVideoPreview] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [uploadedUrl, setUploadedUrl] = useState<string | null>(null);
+  const [uploaded, setUploaded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -19,7 +20,10 @@ export default function ImageUploader({ userId, onUploaded }: ImageUploaderProps
     if (!file) return;
 
     setErrorMsg(null);
-    setUploadedUrl(null);
+    setUploaded(false);
+
+    const fileIsVideo = file.type.startsWith('video/');
+    setIsVideoPreview(fileIsVideo);
 
     // Δείχνουμε άμεσα ένα τοπικό preview, πριν ακόμα ξεκινήσει το πραγματικό upload
     const localPreview = URL.createObjectURL(file);
@@ -27,9 +31,9 @@ export default function ImageUploader({ userId, onUploaded }: ImageUploaderProps
     setUploading(true);
 
     try {
-      const publicUrl = await uploadPostImage(file, userId);
-      setUploadedUrl(publicUrl);
-      onUploaded(publicUrl);
+      const { url, isVideo } = await uploadPostImage(file, userId);
+      setUploaded(true);
+      onUploaded(url, isVideo);
     } catch (err) {
       setErrorMsg(err instanceof Error ? err.message : 'Κάτι πήγε στραβά κατά το ανέβασμα.');
       setPreviewUrl(null);
@@ -40,7 +44,7 @@ export default function ImageUploader({ userId, onUploaded }: ImageUploaderProps
 
   const handleRemove = () => {
     setPreviewUrl(null);
-    setUploadedUrl(null);
+    setUploaded(false);
     setErrorMsg(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
@@ -50,7 +54,7 @@ export default function ImageUploader({ userId, onUploaded }: ImageUploaderProps
       <input
         ref={fileInputRef}
         type="file"
-        accept="image/*"
+        accept="image/*,video/*"
         onChange={handleFileSelect}
         className="hidden"
         id="image-upload-input"
@@ -61,14 +65,21 @@ export default function ImageUploader({ userId, onUploaded }: ImageUploaderProps
           htmlFor="image-upload-input"
           className="flex flex-col items-center justify-center gap-2 w-full h-36 rounded-xl border border-dashed border-outline-variant/40 bg-surface-container/30 cursor-pointer hover:border-primary-container/60 hover:bg-surface-container/50 transition-all"
         >
-          <ImageIcon className="w-6 h-6 text-on-surface-variant" />
-          <span className="text-sm text-on-surface-variant">Ανέβασε εικόνα</span>
+          <div className="flex items-center gap-2">
+            <ImageIcon className="w-5 h-5 text-on-surface-variant" />
+            <Video className="w-5 h-5 text-on-surface-variant" />
+          </div>
+          <span className="text-sm text-on-surface-variant">Ανέβασε εικόνα ή βίντεο</span>
         </label>
       )}
 
       {previewUrl && (
-        <div className="relative w-full h-48 rounded-xl overflow-hidden border border-outline-variant/30">
-          <img src={previewUrl} alt="Προεπισκόπηση" className="w-full h-full object-cover" />
+        <div className="relative w-full h-48 rounded-xl overflow-hidden border border-outline-variant/30 bg-black">
+          {isVideoPreview ? (
+            <video src={previewUrl} className="w-full h-full object-cover" controls muted />
+          ) : (
+            <img src={previewUrl} alt="Προεπισκόπηση" className="w-full h-full object-cover" />
+          )}
 
           {uploading && (
             <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2">
@@ -77,7 +88,7 @@ export default function ImageUploader({ userId, onUploaded }: ImageUploaderProps
             </div>
           )}
 
-          {!uploading && uploadedUrl && (
+          {!uploading && uploaded && (
             <button
               onClick={handleRemove}
               type="button"

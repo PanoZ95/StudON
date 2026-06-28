@@ -1,22 +1,29 @@
 import { supabase } from './supabase';
 
 /**
- * Ανεβάζει μια εικόνα στο Supabase Storage (bucket: post-images)
+ * Ανεβάζει μια εικόνα ή ένα βίντεο στο Supabase Storage (bucket: post-images)
  * και επιστρέφει το δημόσιο URL της, έτοιμο για αποθήκευση σε ένα post.
  *
- * Η εικόνα αποθηκεύεται μέσα σε φάκελο με το user id, π.χ.:
+ * Το αρχείο αποθηκεύεται μέσα σε φάκελο με το user id, π.χ.:
  *   post-images/<user_id>/1719234567-photo.jpg
  * Αυτό ταιριάζει με τους storage policies που επιτρέπουν στον χρήστη
  * να γράφει/σβήνει μόνο μέσα στον δικό του φάκελο.
  */
-export async function uploadPostImage(file: File, userId: string): Promise<string> {
-  // Βασικός έλεγχος μεγέθους/τύπου πριν στείλουμε τίποτα στον server
-  const MAX_SIZE_MB = 8;
-  if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-    throw new Error(`Η εικόνα είναι πολύ μεγάλη (μέγιστο ${MAX_SIZE_MB}MB).`);
+export async function uploadPostImage(file: File, userId: string): Promise<{ url: string; isVideo: boolean }> {
+  const isVideo = file.type.startsWith('video/');
+  const isImage = file.type.startsWith('image/');
+
+  if (!isVideo && !isImage) {
+    throw new Error('Επιτρέπονται μόνο αρχεία εικόνας ή βίντεο.');
   }
-  if (!file.type.startsWith('image/')) {
-    throw new Error('Επιτρέπονται μόνο αρχεία εικόνας.');
+
+  // Διαφορετικό όριο μεγέθους ανάλογα τον τύπο — τα βίντεο επιτρέπονται
+  // πιο μεγάλα, αλλά πάντα με ένα λογικό ανώτατο όριο.
+  const MAX_IMAGE_MB = 8;
+  const MAX_VIDEO_MB = 60;
+  const maxSizeMB = isVideo ? MAX_VIDEO_MB : MAX_IMAGE_MB;
+  if (file.size > maxSizeMB * 1024 * 1024) {
+    throw new Error(`Το αρχείο είναι πολύ μεγάλο (μέγιστο ${maxSizeMB}MB).`);
   }
 
   // Μοναδικό όνομα αρχείου ώστε να μη γράφει το ένα πάνω στο άλλο
@@ -32,9 +39,9 @@ export async function uploadPostImage(file: File, userId: string): Promise<strin
     });
 
   if (uploadError) {
-    throw new Error('Αποτυχία ανεβάσματος εικόνας: ' + uploadError.message);
+    throw new Error('Αποτυχία ανεβάσματος: ' + uploadError.message);
   }
 
   const { data } = supabase.storage.from('post-images').getPublicUrl(filePath);
-  return data.publicUrl;
+  return { url: data.publicUrl, isVideo };
 }

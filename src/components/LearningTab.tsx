@@ -533,7 +533,7 @@ function NewCourseModal({ userId, onClose, onCreated }: NewCourseModalProps) {
 
           <div>
             <label className="text-xs text-on-surface-variant mb-1 block">Εικόνα εξωφύλλου</label>
-            <ImageUploader userId={userId} onUploaded={setImageUrl} />
+            <ImageUploader userId={userId} onUploaded={(url) => setImageUrl(url)} />
           </div>
 
           <label className="flex items-center gap-2 text-sm">
@@ -665,7 +665,7 @@ function NewWorkshopModal({ userId, organizerName, onClose, onCreated }: NewWork
 
           <div>
             <label className="text-xs text-on-surface-variant mb-1 block">Εικόνα</label>
-            <ImageUploader userId={userId} onUploaded={setImageUrl} />
+            <ImageUploader userId={userId} onUploaded={(url) => setImageUrl(url)} />
           </div>
 
           <div>

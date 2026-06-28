@@ -221,7 +221,7 @@ function EditProfileModal({ userId, profile, onClose, onSaved }: EditProfileModa
                 <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               </div>
             )}
-            <ImageUploader userId={userId} onUploaded={setAvatarUrl} />
+            <ImageUploader userId={userId} onUploaded={(url) => setAvatarUrl(url)} />
           </div>
 
           <div>

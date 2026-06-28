@@ -12,6 +12,7 @@ export interface Post {
   avatar: string;
   timeAgo: string;
   contentImage: string;
+  isVideo?: boolean;
   engineTag?: string;
   likes: number;
   fireCount: number;

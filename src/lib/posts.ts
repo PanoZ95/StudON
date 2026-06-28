@@ -24,6 +24,7 @@ function mapRowToPost(row: any, currentUserId: string): Post {
     avatar: row.profiles?.avatar_url ?? '',
     timeAgo: timeAgo(row.created_at),
     contentImage: row.content_image_url ?? '',
+    isVideo: row.is_video ?? false,
     engineTag: row.engine_tag ?? undefined,
     likes: likesArray.length,
     fireCount: firesArray.length,
@@ -56,7 +57,7 @@ export async function fetchPosts(currentUserId: string): Promise<Post[]> {
   const { data, error } = await supabase
     .from('posts')
     .select(`
-      id, content_text, content_image_url, engine_tag, category_id, created_at,
+      id, content_text, content_image_url, is_video, engine_tag, category_id, created_at,
       profiles!posts_user_id_fkey ( username, avatar_url ),
       post_likes ( user_id ),
       post_fires ( user_id ),
@@ -74,6 +75,7 @@ interface NewPostInput {
   category: string;
   contentText: string;
   contentImageUrl: string;
+  isVideo?: boolean;
   engineTag?: string;
 }
 
@@ -84,6 +86,7 @@ export async function createPost(input: NewPostInput): Promise<void> {
     category_id: input.category,
     content_text: input.contentText,
     content_image_url: input.contentImageUrl,
+    is_video: input.isVideo ?? false,
     engine_tag: input.engineTag ?? null,
   });
 
@@ -147,7 +150,7 @@ export async function searchPostsAndUsers(
     supabase
       .from('posts')
       .select(`
-        id, content_text, content_image_url, engine_tag, category_id, created_at,
+        id, content_text, content_image_url, is_video, engine_tag, category_id, created_at,
         profiles!posts_user_id_fkey ( username, avatar_url ),
         post_likes ( user_id ),
         post_fires ( user_id ),

@@ -399,7 +399,7 @@ function OrganizeMeetModal({ userId, onClose, onCreated }: OrganizeMeetModalProp
 
           <div className="space-y-1.5">
             <label className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider block">Εικόνα (προαιρετικό)</label>
-            <ImageUploader userId={userId} onUploaded={setImageUrl} />
+            <ImageUploader userId={userId} onUploaded={(url) => setImageUrl(url)} />
           </div>
 
           {errorMsg && <p className="text-sm text-red-400 bg-red-950/30 border border-red-900/40 rounded-lg px-3 py-2">{errorMsg}</p>}

@@ -305,7 +305,7 @@ function NewDiscoveryModal({ userId, onClose, onSubmit }: NewDiscoveryModalProps
 
           <div>
             <label className="text-xs text-on-surface-variant mb-1 block">Εικόνα εξωφύλλου</label>
-            <ImageUploader userId={userId} onUploaded={setImageUrl} />
+            <ImageUploader userId={userId} onUploaded={(url) => setImageUrl(url)} />
           </div>
 
           <div>
