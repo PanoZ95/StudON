@@ -4,8 +4,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import type { Session } from '@supabase/supabase-js';
 
 // Data and Types
-import { INITIAL_NOTIFICATIONS } from './data';
-import { NotificationItem } from './types';
 import { supabase } from './lib/supabase';
 
 // Tab Components
@@ -61,17 +59,9 @@ export default function App() {
   }, [session]);
 
   // Main shared states
-  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
 
-  // Dynamic notification counters
-  const [notificationCount, setNotificationCount] = useState(
-    INITIAL_NOTIFICATIONS.filter(n => n.isUnread).length
-  );
-
-  const addNotification = (notif: NotificationItem) => {
-    setNotifications(prev => [notif, ...prev]);
-    setNotificationCount(prev => prev + 1);
-  };
+  // Δυναμικός μετρητής μη αναγνωσμένων ειδοποιήσεων — ενημερώνεται από το NotificationCenter
+  const [notificationCount, setNotificationCount] = useState(0);
 
   const tabsInfo = [
     { id: 'home' as TabType, label: 'Αρχική', icon: Home },
@@ -260,11 +250,10 @@ export default function App() {
 
       {/* Coordinated Notification Drawer */}
       <NotificationCenter
-        notifications={notifications}
-        setNotifications={setNotifications}
+        userId={session!.user.id}
         isOpen={notifCenterOpen}
         setIsOpen={setNotifCenterOpen}
-        setNotificationCount={setNotificationCount}
+        onUnreadCountChange={setNotificationCount}
       />
     </div>
   );
